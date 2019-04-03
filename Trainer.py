@@ -5,7 +5,7 @@ import time
 
 
 """
-    Load data and get all the chars in text
+    Load data and get all the chars in text.
 """
 text = open('clean').read()
 chars = sorted(list(set(text)))
