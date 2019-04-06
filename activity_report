@@ -4,3 +4,11 @@ Reading from Deep Learning Book and understand all what he already did and impro
 
 # 3rd April
 Create git repo and pushed.
+
+# 6th April
+In trying to understanding the architecture of the LSTM network (Book: Deep Learning, page 413) I am struggling to fully
+understanding the meaning of the i and j indexing in the provided equations (10.33, 10.34, 10.35, 10.36, 10.37).
+
+i index seems to define the layer in the network..
+
+Screenshots of the book (Deep Learning - Goodfellow, I) page is provided in the repo dir /screenshots.

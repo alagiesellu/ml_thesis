@@ -12,7 +12,7 @@ chars = sorted(list(set(text)))
 char_size = len(chars)
 
 """
-    create dictionary to link each char to an id, and vice vercer
+    create dictionary to link each char to an id, and vice versa
 """
 char2id = dict((c, i) for i, c in enumerate(chars))
 id2char = dict((i, c) for i, c in enumerate(chars))
@@ -102,33 +102,46 @@ with graph.as_default():
     data = tf.placeholder(tf.float32, [batch_size, len_per_section, char_size])    # input data
     labels = tf.placeholder(tf.float32, [batch_size, char_size])    # output data
 
-    w_ii = tf.Variable(tf.truncated_normal([char_size, hidden_nodes], -0.1, 0.1))
-    w_io = tf.Variable(tf.truncated_normal([hidden_nodes, hidden_nodes], -0.1, 0.1))
-    b_i = tf.Variable(tf.zeros([1, hidden_nodes]))
+    print(char_size)
 
-    w_fi = tf.Variable(tf.truncated_normal([char_size, hidden_nodes], -0.1, 0.1))
-    w_fo = tf.Variable(tf.truncated_normal([hidden_nodes, hidden_nodes], -0.1, 0.1))
-    b_f = tf.Variable(tf.zeros([1, hidden_nodes]))
+    """
+        Why Weights is random with;
+            mean = -0.1 and standard deviation = 0.1?
+        If weight starts with 0, then signal will be cancelled and will output 0. Then there will be no weight change,
+        and weight will continue being 0.
+        
+        Bias starts with 0.
+    """
+    w_ii = tf.Variable(tf.truncated_normal([char_size, hidden_nodes], -0.1, 0.1, tf.float32))
+    w_io = tf.Variable(tf.truncated_normal([hidden_nodes, hidden_nodes], -0.1, 0.1, tf.float32))
+    b_i = tf.Variable(tf.zeros([1, hidden_nodes], tf.float32))
 
-    w_oi = tf.Variable(tf.truncated_normal([char_size, hidden_nodes], -0.1, 0.1))
-    w_oo = tf.Variable(tf.truncated_normal([hidden_nodes, hidden_nodes], -0.1, 0.1))
-    b_o = tf.Variable(tf.zeros([1, hidden_nodes]))
+    w_fi = tf.Variable(tf.truncated_normal([char_size, hidden_nodes], -0.1, 0.1, tf.float32))
+    w_fo = tf.Variable(tf.truncated_normal([hidden_nodes, hidden_nodes], -0.1, 0.1, tf.float32))
+    b_f = tf.Variable(tf.zeros([1, hidden_nodes], tf.float32))
 
-    w_ci = tf.Variable(tf.truncated_normal([char_size, hidden_nodes], -0.1, 0.1))
-    w_co = tf.Variable(tf.truncated_normal([hidden_nodes, hidden_nodes], -0.1, 0.1))
-    b_c = tf.Variable(tf.zeros([1, hidden_nodes]))
+    w_oi = tf.Variable(tf.truncated_normal([char_size, hidden_nodes], -0.1, 0.1, tf.float32))
+    w_oo = tf.Variable(tf.truncated_normal([hidden_nodes, hidden_nodes], -0.1, 0.1, tf.float32))
+    b_o = tf.Variable(tf.zeros([1, hidden_nodes], tf.float32))
 
-    def lstm(i, o, state):
+    w_ci = tf.Variable(tf.truncated_normal([char_size, hidden_nodes], -0.1, 0.1, tf.float32))
+    w_co = tf.Variable(tf.truncated_normal([hidden_nodes, hidden_nodes], -0.1, 0.1, tf.float32))
+    b_c = tf.Variable(tf.zeros([1, hidden_nodes], tf.float32))
 
+    def lstm(i, o, _state):
+        print('I: ' + str(i))
+        print('W: ' + str(w_ii))
+        print('x: ' + str(tf.matmul(i, w_ii)))
+        exit()
         input_gate = tf.sigmoid(tf.matmul(i, w_ii) + tf.matmul(o, w_io) + b_i)
         forget_gate = tf.sigmoid(tf.matmul(i, w_fi) + tf.matmul(o, w_fo) + b_f)
         output_gate = tf.sigmoid(tf.matmul(i, w_oi) + tf.matmul(o, w_oo) + b_o)
         memory_cell = tf.sigmoid(tf.matmul(i, w_ci) + tf.matmul(o, w_co) + b_c)
 
-        state = forget_gate * state + input_gate * memory_cell
-        output = output_gate * tf.tanh(state)
+        _state = forget_gate * _state + input_gate * memory_cell
+        _output = output_gate * tf.tanh(_state)
 
-        return output, state
+        return _output, _state
 
     output = tf.zeros([batch_size, hidden_nodes])
     state = tf.zeros([batch_size, hidden_nodes])
