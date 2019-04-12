@@ -102,7 +102,7 @@ with graph.as_default():
     data = tf.placeholder(tf.float32, [batch_size, len_per_section, char_size])    # input data
     labels = tf.placeholder(tf.float32, [batch_size, char_size])    # output data
 
-    print(char_size)
+    # print(char_size)
 
     """
         Why Weights is random with;
@@ -111,6 +111,9 @@ with graph.as_default():
         and weight will continue being 0.
         
         Bias starts with 0.
+        
+        Weights for Input Signals (w_ii, w_fi, w_oi & w_ci):
+            Dimension   -   Weight for each char (in this case 50 chars) and in every laywer
     """
     w_ii = tf.Variable(tf.truncated_normal([char_size, hidden_nodes], -0.1, 0.1, tf.float32))
     w_io = tf.Variable(tf.truncated_normal([hidden_nodes, hidden_nodes], -0.1, 0.1, tf.float32))
@@ -129,10 +132,6 @@ with graph.as_default():
     b_c = tf.Variable(tf.zeros([1, hidden_nodes], tf.float32))
 
     def lstm(i, o, _state):
-        print('I: ' + str(i))
-        print('W: ' + str(w_ii))
-        print('x: ' + str(tf.matmul(i, w_ii)))
-        exit()
         input_gate = tf.sigmoid(tf.matmul(i, w_ii) + tf.matmul(o, w_io) + b_i)
         forget_gate = tf.sigmoid(tf.matmul(i, w_fi) + tf.matmul(o, w_fo) + b_f)
         output_gate = tf.sigmoid(tf.matmul(i, w_oi) + tf.matmul(o, w_oo) + b_o)
@@ -165,10 +164,9 @@ with graph.as_default():
 
     logits = tf.matmul(outputs_all_i, w) + b
 
-    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=labels_all_i))
+    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=labels_all_i))
 
     optimizer = tf.train.GradientDescentOptimizer(10.).minimize(loss, global_step=global_step)
-
 
 with tf.Session(graph=graph) as sess:
 
