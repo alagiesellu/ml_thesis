@@ -149,8 +149,8 @@ with graph.as_default():
         _output = output_gate * tf.tanh(_state)
 
         """
-            _output :   shape=(500, 1024)
-            _state  :   shape=(500, 1024)
+            _output :   shape=(batch_size, hidden_layers)
+            _state  :   shape=(batch_size, hidden_layers)
         """
         return _output, _state
 
