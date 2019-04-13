@@ -99,10 +99,18 @@ with graph.as_default():
     global_step = tf.Variable(0)
 
     # placeholders (no data in it during graph const), but will hold data during a session
+    """
+    1D  :   Store batch
+    2D  :   Store input chars section
+    3D  :   Store char
+    """
     data = tf.placeholder(tf.float32, [batch_size, len_per_section, char_size])    # input data
-    labels = tf.placeholder(tf.float32, [batch_size, char_size])    # output data
 
-    # print(char_size)
+    """
+        1D  :   Store batch
+        3D  :   Store output char
+        """
+    labels = tf.placeholder(tf.float32, [batch_size, char_size])    # output data
 
     """
         Why Weights is random with;
@@ -140,6 +148,10 @@ with graph.as_default():
         _state = forget_gate * _state + input_gate * memory_cell
         _output = output_gate * tf.tanh(_state)
 
+        """
+            _output :   shape=(500, 1024)
+            _state  :   shape=(500, 1024)
+        """
         return _output, _state
 
     output = tf.zeros([batch_size, hidden_nodes])
@@ -147,6 +159,9 @@ with graph.as_default():
 
     for i in range(len_per_section):
 
+        """
+        data[:, i, :]   :   i section from all batches
+        """
         output, state = lstm(data[:, i, :], output, state)
 
         if i == 0:
