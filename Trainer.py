@@ -3,6 +3,10 @@ import tensorflow as tf
 import datetime
 import time
 
+"""
+    Shape(row, column)
+"""
+
 
 """
     Load data and get all the chars in text.
@@ -10,6 +14,7 @@ import time
 text = open('clean').read()
 chars = sorted(list(set(text)))
 char_size = len(chars)
+print('char_size : ' + str(char_size))
 
 """
     create dictionary to link each char to an id, and vice versa
@@ -83,7 +88,7 @@ hidden_nodes = 1024
 """
     Directory to store a trained model
 """
-checkpoint_directory = 'ckpt.' + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
+checkpoint_directory = 'ckpt/' + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
 
 if tf.gfile.Exists(checkpoint_directory):
     tf.gfile.DeleteRecursively(checkpoint_directory)
@@ -139,20 +144,31 @@ with graph.as_default():
     w_co = tf.Variable(tf.truncated_normal([hidden_nodes, hidden_nodes], -0.1, 0.1, tf.float32))
     b_c = tf.Variable(tf.zeros([1, hidden_nodes], tf.float32))
 
-    def lstm(i, o, _state):
+    """
+        lstm(i, o, s):
+        _____________________________________________________        
+            Input   i   :   shape=(batch_size, char_size)
+            Output  o   :   shape=(batch_size, hidden_layers)
+            State   s   :   shape=(batch_size, hidden_layers)
+            
+            i * w_i     :   shape=(batch_size, hidden_nodes)
+            o * w_o     :   shape=(batch_size, hidden_nodes)
+            Bias b      :   shape=(1, hidden_nodes)
+            
+            gate        =   (i * w_i) + (o * w_o) + b
+            gate        :   shape=(batch_size, hidden_layers)
+        _____________________________________________________
+    """
+    def lstm(i, o, s):
         input_gate = tf.sigmoid(tf.matmul(i, w_ii) + tf.matmul(o, w_io) + b_i)
         forget_gate = tf.sigmoid(tf.matmul(i, w_fi) + tf.matmul(o, w_fo) + b_f)
         output_gate = tf.sigmoid(tf.matmul(i, w_oi) + tf.matmul(o, w_oo) + b_o)
         memory_cell = tf.sigmoid(tf.matmul(i, w_ci) + tf.matmul(o, w_co) + b_c)
 
-        _state = forget_gate * _state + input_gate * memory_cell
-        _output = output_gate * tf.tanh(_state)
+        s = forget_gate * s + input_gate * memory_cell
+        o = output_gate * tf.tanh(s)
 
-        """
-            _output :   shape=(batch_size, hidden_layers)
-            _state  :   shape=(batch_size, hidden_layers)
-        """
-        return _output, _state
+        return o, s
 
     output = tf.zeros([batch_size, hidden_nodes])
     state = tf.zeros([batch_size, hidden_nodes])
