@@ -88,7 +88,7 @@ hidden_nodes = 1024
 """
     Directory to store a trained model
 """
-checkpoint_directory = 'ckpt/' + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
+checkpoint_directory = 'ckpt/model' # + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
 
 if tf.gfile.Exists(checkpoint_directory):
     tf.gfile.DeleteRecursively(checkpoint_directory)
@@ -146,6 +146,8 @@ with graph.as_default():
 
     """
         lstm(i, o, s):
+        Take in Inputs i and Outpus o, and Previous State s in batches and compute the
+        state and output of the current state.
         _____________________________________________________        
             Input   i   :   shape=(batch_size, char_size)
             Output  o   :   shape=(batch_size, hidden_layers)
@@ -170,25 +172,36 @@ with graph.as_default():
 
         return o, s
 
+    # start with initial empty output and state
     output = tf.zeros([batch_size, hidden_nodes])
     state = tf.zeros([batch_size, hidden_nodes])
 
+    # loop through all the sections.
     for i in range(len_per_section):
 
         """
-        data[:, i, :]   :   i section from all batches
+            data[:, i, :]   :   i(th) section from all batches as input
+            output          :   output from previous input
+            state           :   state  from previous input
         """
         output, state = lstm(data[:, i, :], output, state)
 
-        if i == 0:
-            outputs_all_i = output
-            labels_all_i = data[:, i + 1, :]
-        elif i != len_per_section - 1:
-            outputs_all_i = tf.concat([outputs_all_i, output], 0)
-            labels_all_i = tf.concat([labels_all_i, data[:, i + 1, :]], 0)
-        else:
-            outputs_all_i = tf.concat([outputs_all_i, output], 0)
-            labels_all_i = tf.concat([labels_all_i, labels], 0)
+        """
+            outputs_all_i   :   
+            labels_all_i    :   
+        """
+
+        if i == 0:  # if first section
+            outputs_all_i = output  # make current output the start
+            labels_all_i = data[:, i + 1, :]    # make next input as the start
+
+        elif i != len_per_section - 1:  # not first or last section
+            outputs_all_i = tf.concat([outputs_all_i, output], 0)   # append the current output
+            labels_all_i = tf.concat([labels_all_i, data[:, i + 1, :]], 0)  # append the next input
+
+        else:   # the last section
+            outputs_all_i = tf.concat([outputs_all_i, output], 0)   # append the current output
+            labels_all_i = tf.concat([labels_all_i, labels], 0)     # append empty label
 
     w = tf.Variable(tf.truncated_normal([hidden_nodes, char_size], -0.1, 0.1))
     b = tf.Variable(tf.zeros([char_size]))
