@@ -3,6 +3,16 @@ import tensorflow as tf
 import datetime
 import random
 
+
+len_per_section = 50
+skip = 2
+batch_size = 50
+max_steps = 500
+log_every = 100
+save_every = 100
+hidden_nodes = 50
+learning_rate = 10
+
 """
     Shape(row, column)
 """
@@ -10,11 +20,12 @@ import random
 """
     Load data and get all the chars in text.
 """
-text = open('clean').read()
+file = open('_clean')
+text = file.read()
+file.close()
+
 chars = sorted(list(set(text)))
 char_size = len(chars)
-print(char_size)
-
 
 """
     create dictionary to link each char to an id, and vice versa
@@ -36,14 +47,14 @@ id2char = dict((i, c) for i, c in enumerate(chars))
     ......
     ....
 """
-len_per_section = 50
-skip = 2
 sections = []
 next_chars = []
 
 for i in range(0, len(text) - len_per_section, skip):
     sections.append(text[i: i + len_per_section])
     next_chars.append(text[i + len_per_section])
+
+text = None     # free memory
 
 """
     Create two vectors of zeros to
@@ -77,15 +88,6 @@ for i, section in enumerate(sections):
     y[i, char2id[next_chars[i]]] = 1
 
 """
-
-"""
-batch_size = 50
-max_steps = 1000
-log_every = 100
-save_every = 500
-hidden_nodes = 100
-
-"""
     Directory to store a trained model
 """
 checkpoint_directory = 'ckpt/model'  # + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
@@ -117,6 +119,7 @@ def sample(prediction):
     # that characters ID encoded
     # https://image.slidesharecdn.com/latin-150313140222-conversion-gate01/95/representation-learning-of-vectors-of-words-and-phrases-5-638.jpg?cb=1426255492
     char_one_hot[char_id] = 1.0
+
     return char_one_hot
 
 
@@ -236,9 +239,19 @@ with graph.as_default():
 
     logits = tf.matmul(outputs_all_i, w) + b
 
+    """
+        ----------------------------------------
+        | softmax_cross_entropy_with_logits_v2 |
+        ----------------------------------------
+        Computes softmax cross entropy between logits and labels.
+        Measures the probability error in discrete classification tasks in which the classes are mutually exclusive (each entry is in exactly one class).
+    """
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=labels_all_i))
 
-    optimizer = tf.train.GradientDescentOptimizer(10.).minimize(loss, global_step=global_step)
+    """
+        Update weights to minimize loss. Then increment global_step
+    """
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step=global_step)
 
     ###########
     # Test Graph tensors
@@ -258,9 +271,9 @@ with graph.as_default():
                                 test_state.assign(tf.zeros([1, hidden_nodes])))
 
     """
-        Input   i   :   shape=(batch_size, char_size)
-        Output  o   :   shape=(batch_size, hidden_layers)
-        State   s   :   shape=(batch_size, hidden_layers)
+        Input   test_data   :   shape=(1, char_size)
+        Output  test_output   :   shape=(1, hidden_layers)
+        State   test_state   :   shape=(1, hidden_layers)
     """
     # LSTM
     test_output, test_state = lstm(test_data, test_output, test_state)
@@ -301,16 +314,14 @@ with tf.Session(graph=graph) as sess:
     TESTING SESSION
 """
 with tf.Session(graph=graph) as sess:
+
     # init graph, load model
     tf.global_variables_initializer().run()
     model = tf.train.latest_checkpoint(checkpoint_directory)
     saver = tf.train.Saver()
     saver.restore(sess, model)
 
-    _input = ''
-
     while True:
-
         reset_test_state.run()  # reset the output and state
 
         # initialize an empty char store
@@ -334,8 +345,7 @@ with tf.Session(graph=graph) as sess:
             test_X[0, char_id] = 0
 
         # where we store encoded char predictions
-        test_X = np.zeros((1, char_size))
-        test_X[0, char2id[_input[-1]]] = 1.
+        test_X[0, char2id[_input[-1]]] = 1. # store the last char of input
 
         next_char = ''
         text_generated = ''
@@ -344,12 +354,16 @@ with tf.Session(graph=graph) as sess:
         while next_char != '\n':
             # get each prediction probability
             prediction = test_prediction.eval({test_data: test_X})[0]
+
             # one hot encode it
             next_char_one_hot = sample(prediction)
+
             # get the indices of the max values (highest probability)  and convert to char
             next_char = id2char[np.argmax(next_char_one_hot)]
+
             # add each char to the output text iteratively
             text_generated += next_char
+
             # update the
             test_X = next_char_one_hot.reshape((1, char_size))
 
