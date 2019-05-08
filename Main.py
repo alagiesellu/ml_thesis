@@ -297,6 +297,7 @@ with tf.Session(graph=graph) as sess:
     X_length = len(X)
 
     for step in range(max_steps):
+        print(step)
 
         offset = offset % X_length
 
@@ -360,7 +361,6 @@ with tf.Session(graph=graph) as sess:
             log_file = open('log_file', 'a')
             log_file.write(log + '\n' + text_generated + '\n\n')
             log_file.close()
-            print(text_generated)
 
 
 exit()
