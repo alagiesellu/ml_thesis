@@ -2,15 +2,14 @@ import numpy as np
 import tensorflow as tf
 import datetime
 import random
-import time
 
 
-file = 'shakespeare.txt'
+file = 'clean_'
 len_per_section = 50
 skip = 2
-batch_size = 100
+batch_size = 50
 max_steps = 100000
-log_every = 5000
+log_every = 10000
 hidden_nodes = 500
 learning_rate = 10.
 
@@ -55,10 +54,8 @@ for i in range(0, len(text) - len_per_section, skip):
     sections.append(text[i: i + len_per_section])
     next_chars.append(text[i + len_per_section])
 
-# test with "iou_a"
-test_input = text[100:200]
 
-text = None     # free memory
+#text = None     # free memory
 
 """
     Create two vectors of zeros to
@@ -94,15 +91,7 @@ for i, section in enumerate(sections):
 """
     Directory to store a trained model
 """
-checkpoint_directory = 'ckpt/model_' + str(datetime.date.fromtimestamp(time.time()))
-
-if tf.gfile.Exists(checkpoint_directory):
-    tf.gfile.DeleteRecursively(checkpoint_directory)
-tf.gfile.MakeDirs(checkpoint_directory)
-
-log_file = open('log_file', 'a')
-log_file.write(str('>'*5) + checkpoint_directory + '\n\n')
-log_file.close()
+checkpoint_directory = 'ckpt/model'  # + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
 
 
 def sample(prediction):
@@ -287,85 +276,6 @@ with graph.as_default():
     test_output, test_state = lstm(test_data, test_output, test_state)
     test_prediction = tf.nn.softmax(tf.matmul(test_output, w) + b)
 
-"""
-    TRAINING SESSION
-"""
-with tf.Session(graph=graph) as sess:
-    tf.global_variables_initializer().run()
-    offset = 0
-    saver = tf.train.Saver()
-    X_length = len(X)
-
-    for step in range(max_steps):
-
-        offset = offset % X_length
-
-        if offset <= (X_length - batch_size):
-            batch_data = X[offset: offset + batch_size]
-            batch_labels = y[offset: offset + batch_size]
-            offset += batch_size
-        else:
-            to_add = batch_size - (X_length - offset)
-            batch_data = np.concatenate((X[offset:X_length], X[0: to_add]))
-            batch_labels = np.concatenate((y[offset:X_length], y[0: to_add]))
-            offset = to_add
-
-        _, training_loss = sess.run([optimizer, loss], feed_dict={data: batch_data, labels: batch_labels})
-
-        if step % log_every == 0:
-            log = 'training loss at step %d: %.2f (%s)' % (step, training_loss, datetime.datetime.now())
-
-            saver.save(sess, checkpoint_directory + '/model', global_step=step)
-
-            reset_test_state.run()  # reset the output and state
-
-            # initialize an empty char store
-            test_X = np.zeros((1, char_size))
-
-            # start feeding all chars in the test_start text, to start a sequence
-            for i in range(len(test_input)):
-                char_id = char2id[test_input[i]]
-                # store it in id from
-                test_X[0, char_id] = 1.
-
-                # feed it to model, test_prediction is the output value
-                _ = sess.run(test_prediction, feed_dict={test_data: test_X})
-
-                # reset char store
-                test_X[0, char_id] = 0.
-
-            # where we store encoded char predictions
-            test_X[0, char2id[test_input[-1]]] = 1.  # store the last char of input
-
-            next_char = ''
-            text_generated = test_input + ' >>  '
-
-            # generate until an end of line
-            while next_char != '\n':
-                # get each prediction probability
-                prediction = test_prediction.eval({test_data: test_X})[0]
-
-                # one hot encode it
-                next_char_one_hot = sample(prediction)
-
-                # get the indices of the max values (highest probability)  and convert to char
-                next_char = id2char[np.argmax(next_char_one_hot)]
-
-                # add each char to the output text iteratively
-                text_generated += next_char
-
-                # update the
-                test_X = next_char_one_hot.reshape((1, char_size))
-
-            log_file = open('log_file', 'a')
-            log_file.write(log + '\n' + text_generated + '\n\n')
-            log_file.close()
-            print(text_generated)
-
-
-exit()
-"""
-    TESTING SESSION
     
 with tf.Session(graph=graph) as sess:
 
@@ -386,6 +296,11 @@ with tf.Session(graph=graph) as sess:
         if _input == 'exit()':
             exit()
 
+        ran = random.randint(0, int(len(text)/2))
+        _input = text[ran:ran+25]
+
+        print(_input)
+
         # start feeding all chars in the test_start text, to start a sequence
         for i in range(len(_input)):
             char_id = char2id[_input[i]]
@@ -405,7 +320,7 @@ with tf.Session(graph=graph) as sess:
         text_generated = ''
 
         # generate until an end of line
-        while next_char != '\n':
+        while next_char != '.':
             # get each prediction probability
             prediction = test_prediction.eval({test_data: test_X})[0]
 
@@ -422,4 +337,3 @@ with tf.Session(graph=graph) as sess:
             test_X = next_char_one_hot.reshape((1, char_size))
 
         print('AI   >>   ' + text_generated)
-"""
