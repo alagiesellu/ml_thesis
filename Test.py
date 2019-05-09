@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 import datetime
 import random
+import time
 
 
 file = 'clean_'
@@ -91,8 +92,9 @@ for i, section in enumerate(sections):
 """
     Directory to store a trained model
 """
-checkpoint_directory = 'ckpt/model'  # + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
+checkpoint_directory = 'ckpt/model_' + str(datetime.date.fromtimestamp(time.time()))
 
+print(checkpoint_directory)
 
 def sample(prediction):
     # Samples are uniformly distributed over the half-open interval

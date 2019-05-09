@@ -12,3 +12,20 @@ understanding the meaning of the i and j indexing in the provided equations (10.
 i index seems to define the layer in the network..
 
 Screenshots of the book (Deep Learning - Goodfellow, I) page is provided in the repo dir /screenshots.
+
+
+# 9th May
+During model testing, when a char is fed into and the softmax of the logits is computed, a prediction is returned.
+This prediction is a list float values which sum up to ~1 and the number in the list is the same as the number of chars
+in the dataset. But these prediction have to be passed into the sample(prediction) function to return the most likely
+char, not by choosing the index with the highest value.
+
+In this sample function, a random probability [0,1] is generated which the choice of the char to be chosen depends on.
+
+Now my concern is, how can prediction from the model depend on a randomly generated value.
+
+
+# 9th May
+Propose Question for focus on:
+    1. How well can a LSTM model do in generating text through char by char?
+    2. Will it understand sentence context through char by char?
