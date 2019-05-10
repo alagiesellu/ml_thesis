@@ -6,6 +6,7 @@ from Helper import Helper
 
 
 helper = Helper()
+#file = 'data/_clean'
 file = 'data/shakespeare.txt'
 len_per_section = 50
 skip = 2

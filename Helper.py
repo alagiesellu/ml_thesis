@@ -4,7 +4,6 @@ import requests
 import os
 
 logs_directory = 'logs'
-send_zip = 'send.zip'
 
 
 class Helper:
@@ -15,6 +14,8 @@ class Helper:
 
         self.dir_count = str(len(tf.gfile.ListDirectory(logs_directory)))
 
+        self.send_zip = 'send_' + self.dir_count + '.zip'
+
         self.logs_directory = logs_directory + "/" + self.dir_count
         self.model_dir = self.logs_directory + "/model"
         self.output_file = self.logs_directory + "/__main__.py"
@@ -22,13 +23,13 @@ class Helper:
         tf.gfile.MakeDirs(self.model_dir)
 
     def backup(self):
-        zipapp.create_archive(self.logs_directory, send_zip)
+        zipapp.create_archive(self.logs_directory, self.send_zip)
 
         # then send zip file
-        image_filename = os.path.basename(send_zip)
+        image_filename = os.path.basename(self.send_zip)
 
         multipart_form_data = {
-            'uploaded_file': (image_filename, open(send_zip, 'rb')),
+            'uploaded_file': (image_filename, open(self.send_zip, 'rb')),
         }
 
         response = requests.post('https://tools.sofora.net/index.php',
