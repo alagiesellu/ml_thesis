@@ -92,7 +92,7 @@ for i, section in enumerate(sections):
 """
     Directory to store a trained model
 """
-checkpoint_directory = 'ckpt/model_' + str(datetime.date.fromtimestamp(time.time()))
+checkpoint_directory = 'ckpt/model_2019-05-08' #+ str(datetime.date.fromtimestamp(time.time()))
 
 print(checkpoint_directory)
 

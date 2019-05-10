@@ -2,16 +2,17 @@ import numpy as np
 import tensorflow as tf
 import datetime
 import random
-import time
+from Helper import Helper
 
 
-file = 'shakespeare.txt'
+helper = Helper()
+file = 'clean_'
 len_per_section = 50
 skip = 2
-batch_size = 100
-max_steps = 100000
-log_every = 5000
-hidden_nodes = 500
+batch_size = 50
+max_steps = 1000
+log_every = 50
+hidden_nodes = 50
 learning_rate = 10.
 
 """
@@ -23,6 +24,7 @@ learning_rate = 10.
 """
 file = open(file)
 text = file.read()
+text_length = len(text)
 file.close()
 
 chars = sorted(list(set(text)))
@@ -55,11 +57,6 @@ for i in range(0, len(text) - len_per_section, skip):
     sections.append(text[i: i + len_per_section])
     next_chars.append(text[i + len_per_section])
 
-# test with "iou_a"
-test_input = text[100:200]
-
-text = None     # free memory
-
 """
     Create two vectors of zeros to
 
@@ -90,19 +87,6 @@ for i, section in enumerate(sections):
     for j, char in enumerate(section):
         X[i, j, char2id[char]] = 1.
     y[i, char2id[next_chars[i]]] = 1.
-
-"""
-    Directory to store a trained model
-"""
-checkpoint_directory = 'ckpt/model_' + str(datetime.date.fromtimestamp(time.time()))
-
-if tf.gfile.Exists(checkpoint_directory):
-    tf.gfile.DeleteRecursively(checkpoint_directory)
-tf.gfile.MakeDirs(checkpoint_directory)
-
-log_file = open('log_file', 'a')
-log_file.write(str('>'*5) + checkpoint_directory + '\n\n')
-log_file.close()
 
 
 def sample(prediction):
@@ -297,7 +281,6 @@ with tf.Session(graph=graph) as sess:
     X_length = len(X)
 
     for step in range(max_steps):
-        print(step)
 
         offset = offset % X_length
 
@@ -314,14 +297,17 @@ with tf.Session(graph=graph) as sess:
         _, training_loss = sess.run([optimizer, loss], feed_dict={data: batch_data, labels: batch_labels})
 
         if step % log_every == 0:
-            log = 'training loss at step %d: %.2f (%s)' % (step, training_loss, datetime.datetime.now())
 
-            saver.save(sess, checkpoint_directory + '/model', global_step=step)
+            saver.save(sess, helper.get_ckpt_dir(), global_step=step)
 
             reset_test_state.run()  # reset the output and state
 
             # initialize an empty char store
             test_X = np.zeros((1, char_size))
+
+            # take random text
+            ran_num = random.randint(0, text_length-55)
+            test_input = text[ran_num:ran_num+50]
 
             # start feeding all chars in the test_start text, to start a sequence
             for i in range(len(test_input)):
@@ -339,7 +325,7 @@ with tf.Session(graph=graph) as sess:
             test_X[0, char2id[test_input[-1]]] = 1.  # store the last char of input
 
             next_char = ''
-            text_generated = test_input + ' >>  '
+            text_generated = ''
 
             # generate until an end of line
             while next_char != '\n':
@@ -358,12 +344,18 @@ with tf.Session(graph=graph) as sess:
                 # update the
                 test_X = next_char_one_hot.reshape((1, char_size))
 
-            log_file = open('log_file', 'a')
-            log_file.write(log + '\n' + text_generated + '\n\n')
-            log_file.close()
+            helper.write_file(
+                str("-"*100) +
+                "\nlost:" + str(training_loss) +
+                "\nstep:" + str(step) +
+                "\ntime:" + str(datetime.datetime.now()) +
+                "\ntext:" + test_input +
+                "\ngenerated:" + text_generated
+            )
+
+            helper.backup()
 
 
-exit()
 """
     TESTING SESSION
     
