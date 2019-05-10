@@ -6,13 +6,13 @@ from Helper import Helper
 
 
 helper = Helper()
-file = 'clean_'
+file = 'data/shakespeare.txt'
 len_per_section = 50
 skip = 2
-batch_size = 50
-max_steps = 1000
-log_every = 50
-hidden_nodes = 50
+batch_size = 500
+max_steps = 1000000
+log_every = 5000
+hidden_nodes = 500
 learning_rate = 10.
 
 """
