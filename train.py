@@ -2,18 +2,16 @@ import numpy as np
 import tensorflow as tf
 import datetime
 import random
-from Helper import Helper
+from helper import Helper
 
-
-helper = Helper()
-#file = 'data/_clean'
-file = 'data/shakespeare.txt'
+file = 'data/_clean'
+#file = 'data/shakespeare.txt'
 len_per_section = 50
-skip = 2
-batch_size = 500
-max_steps = 1000000
-log_every = 5000
-hidden_nodes = 500
+skip = int(len_per_section / 10)
+batch_size = 50
+max_steps = 1000
+log_every = 100
+hidden_nodes = 10
 learning_rate = 10.
 
 """
@@ -28,8 +26,10 @@ text = file.read()
 text_length = len(text)
 file.close()
 
-chars = sorted(list(set(text)))
+chars = list(set(text))
 char_size = len(chars)
+
+
 
 """
     create dictionary to link each char to an id, and vice versa
@@ -57,6 +57,12 @@ next_chars = []
 for i in range(0, len(text) - len_per_section, skip):
     sections.append(text[i: i + len_per_section])
     next_chars.append(text[i + len_per_section])
+
+# then free memory space taken by text
+text = None
+
+# helper class with useful functions
+helper = Helper(False)
 
 """
     Create two vectors of zeros to
@@ -90,28 +96,28 @@ for i, section in enumerate(sections):
     y[i, char2id[next_chars[i]]] = 1.
 
 
-def sample(prediction):
+def sample(_prediction):
     # Samples are uniformly distributed over the half-open interval
-    r = random.uniform(0, 1)
+    _r = random.uniform(0, 1)
     # store prediction char
-    s = 0
+    _s = 0
     # since length > indices starting at 0
-    char_id = len(prediction) - 1
+    _char_id = len(_prediction) - 1
     # for each char prediction probabilty
-    for i in range(len(prediction)):
+    for i in range(len(_prediction)):
         # assign it to S
-        s += prediction[i]
+        _s += _prediction[i]
         # check if probability greater than our randomly generated one
-        if s >= r:
+        if _s >= _r:
             # if it is, thats the likely next char
-            char_id = i
+            _char_id = i
             break
     # dont try to rank, just differentiate
     # initialize the vector
     char_one_hot = np.zeros(shape=[char_size])
     # that characters ID encoded
     # https://image.slidesharecdn.com/latin-150313140222-conversion-gate01/95/representation-learning-of-vectors-of-words-and-phrases-5-638.jpg?cb=1426255492
-    char_one_hot[char_id] = 1.
+    char_one_hot[_char_id] = 1.
 
     return char_one_hot
 
@@ -237,7 +243,8 @@ with graph.as_default():
         | softmax_cross_entropy_with_logits_v2 |
         ----------------------------------------
         Computes softmax cross entropy between logits and labels.
-        Measures the probability error in discrete classification tasks in which the classes are mutually exclusive (each entry is in exactly one class).
+        Measures the probability error in discrete classification tasks in which the classes are mutually exclusive
+        (each entry is in exactly one class).
     """
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=labels_all_i))
 
@@ -281,6 +288,7 @@ with tf.Session(graph=graph) as sess:
     saver = tf.train.Saver()
     X_length = len(X)
 
+    # make steps
     for step in range(max_steps):
 
         offset = offset % X_length
@@ -297,7 +305,7 @@ with tf.Session(graph=graph) as sess:
 
         _, training_loss = sess.run([optimizer, loss], feed_dict={data: batch_data, labels: batch_labels})
 
-        if step % log_every == 0:
+        if (step + 1) % log_every == 0:
 
             saver.save(sess, helper.get_ckpt_dir(), global_step=step)
 
@@ -306,9 +314,8 @@ with tf.Session(graph=graph) as sess:
             # initialize an empty char store
             test_X = np.zeros((1, char_size))
 
-            # take random text
-            ran_num = random.randint(0, text_length-55)
-            test_input = text[ran_num:ran_num+50]
+            # take random char
+            test_input = chars[random.randint(0, char_size-1)]
 
             # start feeding all chars in the test_start text, to start a sequence
             for i in range(len(test_input)):
@@ -353,6 +360,7 @@ with tf.Session(graph=graph) as sess:
                 "\ntext:" + test_input +
                 "\ngenerated:" + text_generated
             )
+            print(step)
 
             helper.backup()
 

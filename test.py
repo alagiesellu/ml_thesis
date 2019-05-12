@@ -1,17 +1,16 @@
 import numpy as np
 import tensorflow as tf
-import datetime
 import random
-import time
 
 
-file = 'clean_'
+#file = 'data/_clean'
+file = 'data/shakespeare.txt'
 len_per_section = 50
-skip = 2
+skip = int(len_per_section / 5)
 batch_size = 50
 max_steps = 100000
-log_every = 10000
-hidden_nodes = 500
+log_every = 1000
+hidden_nodes = 100
 learning_rate = 10.
 
 """
@@ -92,7 +91,7 @@ for i, section in enumerate(sections):
 """
     Directory to store a trained model
 """
-checkpoint_directory = 'ckpt/model_2019-05-08' #+ str(datetime.date.fromtimestamp(time.time()))
+checkpoint_directory = 'logs/20//model' #+ str(datetime.date.fromtimestamp(time.time()))
 
 print(checkpoint_directory)
 
@@ -293,7 +292,7 @@ with tf.Session(graph=graph) as sess:
         # initialize an empty char store
         test_X = np.zeros((1, char_size))
 
-        _input = input('ME    >>   ')
+        _input = input('Enter to generate >>')
 
         if _input == 'exit()':
             exit()
