@@ -97,24 +97,57 @@ for i, section in enumerate(sections):
 
 
 def sample(_prediction):
-    # Samples are uniformly distributed over the half-open interval
-    _r = random.uniform(0, 1)
-    # store prediction char
-    _s = 0
-    # since length > indices starting at 0
-    _char_id = len(_prediction) - 1
+    print(_prediction)
+    _h = 0
+    _i = 0
+
     # for each char prediction probabilty
     for i in range(len(_prediction)):
-        # assign it to S
-        _s += _prediction[i]
-        # check if probability greater than our randomly generated one
-        if _s >= _r:
-            # if it is, thats the likely next char
-            _char_id = i
-            break
+
+        if _prediction[i] > _h:
+            _h = _prediction[i]
+            _i = i
+
+    _char_id = i
+
     # dont try to rank, just differentiate
     # initialize the vector
     char_one_hot = np.zeros(shape=[char_size])
+
+    # that characters ID encoded
+    # https://image.slidesharecdn.com/latin-150313140222-conversion-gate01/95/representation-learning-of-vectors-of-words-and-phrases-5-638.jpg?cb=1426255492
+    char_one_hot[_char_id] = 1.
+
+    return char_one_hot
+
+
+def sample_(_prediction):
+    # Samples are uniformly distributed over the half-open interval
+    _r = random.uniform(0, 1)
+
+    # store prediction char
+    _s = 0
+
+    # since length > indices starting at 0
+    _char_id = len(_prediction) - 1
+
+    # for each char prediction probabilty
+    for i in range(len(_prediction)):
+
+        # it add up to s
+        _s += _prediction[i]
+
+        # check if probability greater than our randomly generated one
+        if _s >= _r:
+
+            # if it is, thats the likely next char
+            _char_id = i
+            break
+
+    # dont try to rank, just differentiate
+    # initialize the vector
+    char_one_hot = np.zeros(shape=[char_size])
+
     # that characters ID encoded
     # https://image.slidesharecdn.com/latin-150313140222-conversion-gate01/95/representation-learning-of-vectors-of-words-and-phrases-5-638.jpg?cb=1426255492
     char_one_hot[_char_id] = 1.
@@ -155,6 +188,7 @@ with graph.as_default():
         Weights for Input Signals (w_ii, w_fi, w_oi & w_ci):
             Dimension   -   Weight for each char (in this case 50 chars) and in every laywer
     """
+
     w_ii = tf.Variable(tf.truncated_normal([char_size, hidden_nodes], -0.1, 0.1, tf.float32))
     w_io = tf.Variable(tf.truncated_normal([hidden_nodes, hidden_nodes], -0.1, 0.1, tf.float32))
     b_i = tf.Variable(tf.zeros([1, hidden_nodes], tf.float32))
@@ -335,8 +369,11 @@ with tf.Session(graph=graph) as sess:
             next_char = ''
             text_generated = ''
 
+            count = 0
+
             # generate until an end of line
-            while next_char != '\n':
+            while count < 10:
+                count += 1
                 # get each prediction probability
                 prediction = test_prediction.eval({test_data: test_X})[0]
 
@@ -354,7 +391,7 @@ with tf.Session(graph=graph) as sess:
 
             helper.write_file(
                 str("-"*100) +
-                "\nlost:" + str(training_loss) +
+                "\n" + str(training_loss) +
                 "\nstep:" + str(step) +
                 "\ntime:" + str(datetime.datetime.now()) +
                 "\ntext:" + test_input +
