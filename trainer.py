@@ -5,14 +5,11 @@
 
 
 import numpy as np
-import requests
 import zipapp
 import requests
 import os
 import datetime
-
-import tensorflow.compat.v1 as tf
-tf.disable_v2_behavior()
+import tensorflow as tf
 
 
 # In[57]:
@@ -25,14 +22,14 @@ max_steps = 1000000
 log_every = 500
 learning_rate = 10.
 
-dataset_source = 'https://tools.sofora.net/uploads/mini-shakespeare.txt'
+dataset_source = 'data/mini-shakespeare.txt'
 send_backup_url='https://tools.sofora.net/index.php'
 
 
 # In[59]:
 
-
-text = requests.get(dataset_source).text
+file = open(dataset_source)
+text = file.read()
 
 text_len = len(text)
 
