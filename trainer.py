@@ -10,9 +10,7 @@ import zipapp
 import requests
 import os
 import datetime
-
-import tensorflow.compat.v1 as tf
-tf.disable_v2_behavior()
+import tensorflow as tf
 
 
 # In[57]:
