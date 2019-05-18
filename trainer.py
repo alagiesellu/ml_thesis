@@ -16,7 +16,7 @@ import tensorflow as tf
 
 
 len_per_section = 50
-skip = int(len_per_section / 10)
+skip = int(len_per_section / 2)
 batch_size = 25
 max_steps = 1000000
 log_every = 500
