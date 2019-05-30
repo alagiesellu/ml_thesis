@@ -1,22 +1,24 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[1]:
 
 
 import numpy as np
+import requests
 import zipapp
 import requests
 import os
 import datetime
+
 import tensorflow as tf
 
 
-# In[57]:
+# In[2]:
 
 
 len_per_section = 50
-skip = int(len_per_section / 2)
+skip = int(len_per_section / 10)
 batch_size = 25
 max_steps = 1000000
 log_every = 500
@@ -26,10 +28,12 @@ dataset_source = 'data/mini-shakespeare.txt'
 send_backup_url='https://tools.sofora.net/index.php'
 
 
-# In[59]:
+# In[3]:
+
 
 file = open(dataset_source)
 text = file.read()
+file.close()
 
 text_len = len(text)
 
@@ -47,7 +51,7 @@ id2char = dict((i, c) for i, c in enumerate(chars))
 # In[66]:
 
 
-# suggested model Nh = 2/3 * (Ni + No) from 
+# suggested model =>> Nh = 2/3 * (Ni + No) from 
 # https://towardsdatascience.com/choosing-the-right-hyperparameters-for-a-simple-lstm-using-keras-f8e9ed76f046
 hidden_nodes = int(2/3 * (len_per_section * char_size))
 
@@ -271,5 +275,5 @@ with tf.Session(graph=graph) as sess:
                 print_it=True
             )
 
-            helper.backup()
+            # helper.backup()
 
