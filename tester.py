@@ -21,7 +21,7 @@ len_per_section = 50
 skip = int(len_per_section / 10)
 batch_size = 25
 max_steps = 1000000
-log_every = 100
+log_every = 500
 learning_rate = 10.
 names = []
 added = {}
@@ -257,6 +257,24 @@ helper = Helper()
 
 
 def sample(prediction):
+
+    char_id = 0
+
+    for i in range(len(prediction)):
+
+        if prediction[char_id] < prediction[i]:
+            char_id = i
+
+    char_one_hot = np.zeros(shape=[char_size])
+
+    # that characters ID encoded
+    # https://image.slidesharecdn.com/latin-150313140222-conversion-gate01/95/representation-learning-of-vectors-of-words-and-phrases-5-638.jpg?cb=1426255492
+    char_one_hot[char_id] = 1.
+
+    return char_one_hot
+
+
+def _sample(prediction):
     # Samples are uniformly distributed over the half-open interval
     r = random.uniform(0, 1)
     # store prediction char
