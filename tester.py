@@ -48,6 +48,8 @@ names.sort()
 added = None
 
 
+file = open(dataset_source)
+
 text = file.read()[:500000]
 file.close()
 
